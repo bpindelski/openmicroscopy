@@ -20,6 +20,7 @@ package ome.services.blitz.repo;
 import java.util.Map;
 import java.util.List;
 import java.util.HashMap;
+import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
@@ -255,11 +256,18 @@ public class ManagedImportProcessI extends AbstractAmdServant
         }
 
         Map<Integer, String> failingChecksums = new HashMap<Integer, String>();
+        Random random = new Random();
         for (int i = 0; i < size; i++) {
             String usedFile = location.sharedPath + FsFile.separatorChar + location.usedFiles.get(i);
             CheckedPath cp = repo.checkPath(usedFile, settings.checksumAlgorithm, this.current);
             final String clientHash = hashes.get(i);
-            final String serverHash = cp.hash();
+            final String serverHash;
+            // if sizeOfUsedFiles > 1, fail checksums randomly
+            if (random.nextBoolean()) {
+                serverHash = "foobar";
+            } else {
+                serverHash = cp.hash();
+            }
             if (!clientHash.equals(serverHash)) {
                 failingChecksums.put(i, serverHash);
             }
