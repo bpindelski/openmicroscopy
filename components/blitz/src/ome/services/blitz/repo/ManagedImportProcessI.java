@@ -262,7 +262,7 @@ public class ManagedImportProcessI extends AbstractAmdServant
             CheckedPath cp = repo.checkPath(usedFile, settings.checksumAlgorithm, this.current);
             final String clientHash = hashes.get(i);
             final String serverHash;
-            // if sizeOfUsedFiles > 1, fail checksums randomly
+            // fail checksums randomly
             if (random.nextBoolean()) {
                 serverHash = "foobar";
             } else {
