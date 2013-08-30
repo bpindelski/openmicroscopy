@@ -58,6 +58,10 @@
     <constructor-arg value="true"/>
   </bean>
 
+  <bean id="centrifyPasswordProvider" class="ome.security.auth.CentrifyPasswordProvider">
+    <constructor-arg ref="passwordUtil"/>
+  </bean>
+
   <bean id="ldapPasswordProvider" class="ome.security.auth.LdapPasswordProvider">
     <description>
         New LDAP PasswordProvider implementation as of 4.3.2 which checks the user_filter
@@ -114,6 +118,7 @@
   <bean id="chainedPasswordProvider" class="ome.security.auth.PasswordProviders">
     <constructor-arg>
       <list>
+        <ref bean="centrifyPasswordProvider"/>
         <ref bean="ldapPasswordProvider"/>
         <ref bean="jdbcPasswordProvider"/>
       </list>
