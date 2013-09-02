@@ -60,6 +60,7 @@
 
   <bean id="centrifyPasswordProvider" class="ome.security.auth.CentrifyPasswordProvider">
     <constructor-arg ref="passwordUtil"/>
+    <constructor-arg value="true"/>
   </bean>
 
   <bean id="ldapPasswordProvider" class="ome.security.auth.LdapPasswordProvider">
