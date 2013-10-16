@@ -11,14 +11,15 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 
 import loci.common.services.ServiceFactory;
+import loci.formats.codec.JPEG2000CodecOptions;
 import loci.formats.services.JAIIIOService;
 import ome.conditions.MissingPyramidException;
 import ome.model.core.Pixels;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.perf4j.StopWatch;
 import org.perf4j.slf4j.Slf4JStopWatch;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Basic {@link BackOff} implementation which attempts several writes of the
@@ -39,6 +40,8 @@ public class SimpleBackOff implements BackOff {
 
     private final JAIIIOService service;
 
+    private final JPEG2000CodecOptions codecOptions;
+
     protected final double scalingFactor;
 
     protected final double warmUpFactor;
@@ -54,6 +57,10 @@ public class SimpleBackOff implements BackOff {
     public SimpleBackOff(TileSizes sizes) {
         this.sizes = sizes;
         this.count = 10;
+        codecOptions = new JPEG2000CodecOptions();
+        codecOptions.lossless = false;
+        codecOptions.codeBlockSize = CODE_BLOCK;
+        codecOptions.quality = 1.0;
         try {
             ServiceFactory sf = new ServiceFactory();
             service = sf.getInstance(JAIIIOService.class);
@@ -113,7 +120,7 @@ public class SimpleBackOff implements BackOff {
             sw = new Slf4JStopWatch(key);
             image = new BufferedImage(sizes.getTileWidth(), sizes.getTileHeight(), IMAGE_TYPE);
             stream = new ByteArrayOutputStream();
-            service.writeImage(stream, image, false, CODE_BLOCK, 1.0);
+            service.writeImage(stream, image, codecOptions);
             sw.stop();
             elapsed += sw.getElapsedTime();
         }
