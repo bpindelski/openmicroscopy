@@ -56,6 +56,12 @@
      <constructor-arg ref="preferenceContext"/>
   </bean>
 
+  <bean id="dbUsernameCaseCheck" class="ome.services.util.DBUsernameCaseCheck"
+     init-method="start" lazy-init="false">
+     <constructor-arg ref="executor"/>
+     <constructor-arg ref="preferenceContext"/>
+  </bean>
+
   <bean id="serverDirectoryCheck"
      class="ome.services.util.ServerDirectoryCheck"
      init-method="run" lazy-init="false">

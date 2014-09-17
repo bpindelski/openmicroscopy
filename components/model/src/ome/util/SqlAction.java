@@ -460,6 +460,13 @@ public interface SqlAction {
      */
     Map<Long, byte[]> getShareData(List<Long> ids);
 
+    /**
+     * Converts all <code>omename</code> values to lower case. Only modifies
+     * members of the <code>user</code> group.
+     * @return count of updated rows.
+     */
+    int lowercaseUserNames();
+
     //
     // Previously PgArrayHelper
     //
@@ -1124,6 +1131,10 @@ public interface SqlAction {
             _jdbc().query(_lookup("share_data"), //$NON-NLS-1$
                     mapper, params);
             return rv;
+        }
+
+        public int lowercaseUserNames() {
+            return _jdbc().update(_lookup("lowercase_user_names")); // $NON-NLS-1$
         }
     }
 
