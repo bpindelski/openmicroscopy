@@ -18,6 +18,11 @@ import org.springframework.ldap.filter.AndFilter;
 import org.springframework.ldap.filter.EqualsFilter;
 import org.springframework.ldap.filter.Filter;
 import org.springframework.ldap.filter.HardcodedFilter;
+import org.springframework.ldap.filter.OrFilter;
+
+import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableList.Builder;
 
 /**
  * Static methods for dealing with LDAP (DN) and the "password" table. Used
@@ -46,6 +51,7 @@ public class LdapConfig {
 
     private final boolean syncOnLogin;
 
+    private final ImmutableList<String> userLookupAttributes;
 
     /**
      * Sets {@link #syncOnLogin} to false and {@link #base} to null.
@@ -53,7 +59,7 @@ public class LdapConfig {
     public LdapConfig(boolean enabled, String newUserGroup, String userFilter,
         String groupFilter, String userMapping, String groupMapping) {
         this(enabled, newUserGroup, userFilter, groupFilter, userMapping,
-            groupMapping, false, null);
+            groupMapping, false, null, null);
     }
 
     /**
@@ -62,7 +68,17 @@ public class LdapConfig {
     public LdapConfig(boolean enabled, String newUserGroup, String userFilter,
         String groupFilter, String userMapping, String groupMapping, boolean syncOnLogin) {
         this(enabled, newUserGroup, userFilter, groupFilter, userMapping,
-            groupMapping, syncOnLogin, null);
+            groupMapping, syncOnLogin, null, null);
+    }
+
+    /**
+     * Sets {@link #userLookupAttributes} to null.
+     */
+    public LdapConfig(boolean enabled, String newUserGroup, String userFilter,
+            String groupFilter, String userMapping, String groupMapping,
+            boolean syncOnLogin, String base) {
+        this(enabled, newUserGroup, userFilter, groupFilter, userMapping,
+                groupMapping, syncOnLogin, base, null);
     }
 
     /**
@@ -73,7 +89,7 @@ public class LdapConfig {
             String newUserGroup,
             String userFilter, String groupFilter,
             String userMapping, String groupMapping,
-            boolean syncOnLogin, String base) {
+            boolean syncOnLogin, String base, String userLookupAttributes) {
         this.enabled = enabled;
         this.newUserGroup = newUserGroup;
         this.userFilter = new HardcodedFilter(userFilter);
@@ -82,16 +98,30 @@ public class LdapConfig {
         this.groupMapping = parse(groupMapping);
         this.syncOnLogin = syncOnLogin;
         this.base = base;
+
+        final Builder<String> lookupAttributesBuilder = ImmutableList.builder();
+        if (userLookupAttributes != null) {
+            for (String attribute : Splitter.on(",").omitEmptyStrings()
+                    .trimResults().split(userLookupAttributes)) {
+                lookupAttributesBuilder.add(attribute);
+            }
+        } else {
+            lookupAttributesBuilder.add(getUserAttribute("omeName"));
+        }
+        this.userLookupAttributes = lookupAttributesBuilder.build();
     }
 
     // Helpers
 
     public Filter usernameFilter(String username) {
-        String attributeKey = getUserAttribute("omeName");
-        AndFilter filter = new AndFilter();
-        filter.and(getUserFilter());
-        filter.and(new EqualsFilter(attributeKey, username));
-        return filter;
+        AndFilter andFilter = new AndFilter();
+        OrFilter orFilter = new OrFilter();
+        andFilter.and(getUserFilter());
+        for (String lookupAttribute : userLookupAttributes) {
+            orFilter.or(new EqualsFilter(lookupAttribute, username));
+        }
+        andFilter.and(orFilter);
+        return andFilter;
     }
 
     /**
