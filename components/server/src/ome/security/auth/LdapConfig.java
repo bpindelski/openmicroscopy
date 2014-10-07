@@ -13,6 +13,7 @@ import java.util.Map;
 import ome.conditions.InternalException;
 import ome.security.SecuritySystem;
 
+import org.apache.commons.lang.StringUtils;
 import org.springframework.ldap.core.DistinguishedName;
 import org.springframework.ldap.filter.AndFilter;
 import org.springframework.ldap.filter.EqualsFilter;
@@ -100,12 +101,12 @@ public class LdapConfig {
         this.base = base;
 
         final Builder<String> lookupAttributesBuilder = ImmutableList.builder();
-        if (userLookupAttributes != null) {
+        if (StringUtils.isNotBlank(userLookupAttributes)) {
             for (String attribute : Splitter.on(",").omitEmptyStrings()
                     .trimResults().split(userLookupAttributes)) {
                 lookupAttributesBuilder.add(attribute);
             }
-        } else {
+        } else if (StringUtils.isNotBlank(userMapping)) {
             lookupAttributesBuilder.add(getUserAttribute("omeName"));
         }
         this.userLookupAttributes = lookupAttributesBuilder.build();
