@@ -1,13 +1,14 @@
 /*
  *   $Id$
  *
- *   Copyright 2010 Glencoe Software, Inc. All rights reserved.
+ *   Copyright 2010-2014 Glencoe Software, Inc. All rights reserved.
  *   Use is subject to license terms supplied in LICENSE.txt
  */
 
 package ome.security.auth;
 
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import ome.conditions.InternalException;
@@ -22,6 +23,8 @@ import org.springframework.ldap.filter.HardcodedFilter;
 import org.springframework.ldap.filter.OrFilter;
 
 import com.google.common.base.Splitter;
+import com.google.common.collect.BiMap;
+import com.google.common.collect.HashBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
 
@@ -38,7 +41,7 @@ public class LdapConfig {
 
     private final Map<String, String> groupMapping;
 
-    private final Map<String, String> userMapping;
+    private final BiMap<String, String> userMapping;
 
     private final HardcodedFilter userFilter;
 
@@ -183,9 +186,25 @@ public class LdapConfig {
         return groupMapping.get(key);
     }
 
-    protected Map<String, String> parse(String mapping) {
-        Map<String, String> rv = new HashMap<String, String>();
+    /**
+     * Maps the LDAP user lookup attributes to the LDAP user mappings and
+     * returns the corresponding <code>Experimenter</code> fields.
+     *
+     * @return a list of <code>String</code>s, may be empty.
+     */
+    public List<String> getLookupAttributesAsExperimenterFields() {
+        List<String> rv = new ArrayList<String>(userLookupAttributes.size());
+        for (String lookupAttribute : userLookupAttributes) {
+            if (userMapping.inverse().containsKey(lookupAttribute)) {
+                rv.add(userMapping.inverse().get(lookupAttribute));
+            }
+        }
+        return rv;
+    }
+
+    protected BiMap<String, String> parse(String mapping) {
         String[] mappings = mapping.split("[\\n\\s;:,]+");
+        BiMap<String, String> rv = HashBiMap.create(mappings.length);
         for (int i = 0; i < mappings.length; i++) {
             String[] parts = mappings[i].split("=", 2);
             rv.put(parts[0], (parts.length < 2 ? null : parts[1]));

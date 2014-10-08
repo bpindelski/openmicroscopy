@@ -180,15 +180,15 @@ public class LdapImpl extends AbstractLevel2Service implements ILdap,
      * @see ticket:2557
      */
     @SuppressWarnings("unchecked")
-    private Experimenter mapUserName(String username, PersonContextMapper mapper) {
-        Filter filter = config.usernameFilter(username);
+    private Experimenter mapUserName(String login, PersonContextMapper mapper) {
+        Filter filter = config.usernameFilter(login);
         List<Experimenter> p = ldap.search("", filter.encode(),
                 mapper.getControls(), mapper);
 
         if (p.size() == 1 && p.get(0) != null) {
             Experimenter e = p.get(0);
-            if (e.getOmeName().equals(username)) {
-                return p.get(0);
+            if (isLoginMappableToExperimenterField(login, e)) {
+                return e;
             }
         }
         throw new ApiUsageException(
@@ -637,6 +637,32 @@ public class LdapImpl extends AbstractLevel2Service implements ILdap,
                             + e.toString());
         }
         return base;
+    }
+
+    /**
+     * Given an experimenter that is a result of an LDAP query and a string
+     * representing login information, verifies if the configured LDAP lookup
+     * attributes map to one of the experimenter fields and if the matching
+     * field has the same value as the supplied string.
+     *
+     * @param login
+     * @param experimenter
+     * @return boolean <code>true</code> if mapping is valid and values match.
+     *         <code>false</code> otherwise.
+     */
+    private boolean isLoginMappableToExperimenterField(String login,
+            Experimenter experimenter) {
+        Set<String> experimenterFields = new HashSet<String>();
+        for (String field : experimenter.fields()) {
+            experimenterFields.add(field.substring(field.lastIndexOf("_") + 1));
+        }
+        for (String mappedField : config
+                .getLookupAttributesAsExperimenterFields()) {
+            if (experimenterFields.contains(mappedField)) {
+                return experimenter.retrieve(mappedField).equals(login);
+            }
+        }
+        return false;
     }
 
 }
