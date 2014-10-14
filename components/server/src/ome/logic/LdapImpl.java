@@ -83,6 +83,8 @@ import com.google.common.collect.Maps;
 public class LdapImpl extends AbstractLevel2Service implements ILdap,
     ApplicationContextAware {
 
+    private static final String EXPERIMENTER_FIELD_PREFIX = "ome.model.meta.Experimenter_";
+
     private final SqlAction sql;
 
     private final RoleProvider provider;
@@ -652,14 +654,11 @@ public class LdapImpl extends AbstractLevel2Service implements ILdap,
      */
     private boolean isLoginMappableToExperimenterField(String login,
             Experimenter experimenter) {
-        Set<String> experimenterFields = new HashSet<String>();
-        for (String field : experimenter.fields()) {
-            experimenterFields.add(field.substring(field.lastIndexOf("_") + 1));
-        }
         for (String mappedField : config
                 .getLookupAttributesAsExperimenterFields()) {
-            if (experimenterFields.contains(mappedField)) {
-                return experimenter.retrieve(mappedField).equals(login);
+            if (experimenter.retrieve(
+                    EXPERIMENTER_FIELD_PREFIX + mappedField).equals(login)) {
+                return true;
             }
         }
         return false;
