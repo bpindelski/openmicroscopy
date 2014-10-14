@@ -102,6 +102,7 @@ public class LdapPasswordProvider extends ConfigurablePasswordProvider {
             return false;
         }
 
+        user = ldapUtil.findExperimenter(user).getOmeName();
         Long id = util.userId(user);
 
         // Unknown user. First try to create.
