@@ -17,7 +17,7 @@
 --
 
 ---
---- OMERO5 development release upgrade from OMERO5.0__0 to OMERO5.1DEV__12.
+--- OMERO5 development release upgrade from OMERO5.0__0 to OMERO5.1DEV__13.
 ---
 
 BEGIN;
@@ -44,7 +44,7 @@ DROP FUNCTION omero_assert_db_version(varchar, int);
 
 
 INSERT INTO dbpatch (currentVersion, currentPatch,   previousVersion,     previousPatch)
-             VALUES ('OMERO5.1DEV',  12,             'OMERO5.0',          0);
+             VALUES ('OMERO5.1DEV',  13,             'OMERO5.0',          0);
 
 --
 -- Actual upgrade
@@ -1480,16 +1480,26 @@ UPDATE experimenter e SET ldap = true
 DELETE FROM password WHERE dn IS NOT NULL AND hash IS NULL;
 ALTER TABLE password DROP COLUMN dn;
 
+-- #6719 LDAP: Add DN for groups
+
+-- Add "ldap" column to "experimentergroup", default to false
+
+ALTER TABLE experimentergroup ADD COLUMN ldap BOOL NOT NULL DEFAULT false;
+
+-- Set "ldap" value for each group to be false
+
+UPDATE experimentergroup SET ldap = false;
+
 --
 -- FINISHED
 --
 
 UPDATE dbpatch SET message = 'Database updated.', finished = clock_timestamp()
     WHERE currentVersion  = 'OMERO5.1DEV' AND
-          currentPatch    = 12            AND
+          currentPatch    = 13            AND
           previousVersion = 'OMERO5.0'    AND
           previousPatch   = 0;
 
-SELECT CHR(10)||CHR(10)||CHR(10)||'YOU HAVE SUCCESSFULLY UPGRADED YOUR DATABASE TO VERSION OMERO5.1DEV__12'||CHR(10)||CHR(10)||CHR(10) AS Status;
+SELECT CHR(10)||CHR(10)||CHR(10)||'YOU HAVE SUCCESSFULLY UPGRADED YOUR DATABASE TO VERSION OMERO5.1DEV__13'||CHR(10)||CHR(10)||CHR(10) AS Status;
 
 COMMIT;
