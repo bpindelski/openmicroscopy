@@ -140,6 +140,7 @@ class ITest(object):
         gname = self.uuid()
         group = omero.model.ExperimenterGroupI()
         group.name = rstring(gname)
+        group.ldap = rbool(False)
         if perms:
             group.details.permissions = omero.model.PermissionsI(perms)
         gid = admin.createGroup(group)
