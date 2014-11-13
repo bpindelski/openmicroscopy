@@ -72,9 +72,9 @@ user never had a password, one will need to be set!""")
             help="""Discover DNs for existing OMERO users or groups
 
 This command works in the context of users or groups. Specifying
---groups will only discover groups, that is check which group exists in
-the LDAP server and OMERO and has the "ldap" flag disabled - such groups
-will be presented to the user. Omitting --groups will apply the same logic
+--groups will discover only groups, i.e. those that have the "ldap" flag
+disabled in OMERO but do exist in the LDAP server - such groups will be
+presented to the user. Omitting --groups will apply the same logic
 to users.""")
         discover.add_argument(
             "--commands", action="store_true", default=False,
